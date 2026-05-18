@@ -3,135 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Environmental Dashboard 2026</title>
+    <title>Production Monitoring Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #e9ecef; margin: 0; padding: 20px; color: #333; }
-        .dashboard-card { background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; border-top: 5px solid #d90429; }
-        .dashboard-card.green { border-top: 5px solid #28a745; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f7f9; margin: 0; padding: 20px; }
+        .container { max-width: 1100px; margin: auto; }
+        .header { background: #003566; color: white; padding: 20px; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center; }
         
-        h2 { color: #0056b3; font-size: 1.2rem; margin-top: 0; display: flex; justify-content: space-between; }
-        .date-info { font-size: 0.8rem; color: #666; font-weight: normal; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 0 0 10px 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        th { background: #00509d; color: white; padding: 15px; text-align: left; font-size: 14px; }
+        td { padding: 15px; border-bottom: 1px solid #edf2f4; font-size: 15px; }
+        tr:hover { background-color: #f8f9fa; }
 
-        /* Table Styling */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
-        th { background-color: #0056b3; color: white; padding: 10px; text-align: left; }
-        td { padding: 8px 10px; border-bottom: 1px solid #dee2e6; }
-        tr:nth-child(even) { background-color: #f8f9fa; }
-        .positive { color: #d90429; font-weight: bold; }
-        .negative { color: #28a745; font-weight: bold; }
-        .highlight { background-color: #fff9db !important; font-weight: bold; color: #0056b3; }
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; text-decoration: none; display: inline-block; }
+        .follow-up { background: #ff4d4d; color: white; border: none; cursor: pointer; transition: 0.3s; }
+        .follow-up:hover { background: #d90429; transform: scale(1.05); }
+        .completed { background: #e9f7ef; color: #27ae60; }
 
-        /* Grid for Cards */
-        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
-        .intensity-card { background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-top: 4px solid #dee2e6; }
-        .intensity-card.on-track { border-top-color: #28a745; }
-        .intensity-card.follow-up { border-top-color: #d90429; }
-        
-        .comp-name { color: #0056b3; font-weight: bold; margin-bottom: 10px; }
-        .value { font-size: 1.5rem; font-weight: bold; color: #28a745; }
-        .value.red { color: #d90429; }
-        .unit { font-size: 0.8rem; color: #666; }
-        .target { font-size: 0.8rem; color: #888; margin: 5px 0; }
-        .status-btn { display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 0.75rem; color: white; margin-top: 10px; }
-        .btn-red { background: #d90429; }
-        .btn-green { color: #28a745; font-weight: bold; }
+        .percent-up { color: #d90429; font-weight: bold; }
+        .percent-down { color: #2ecc71; font-weight: bold; }
+        .no-data { color: #adb5bd; font-style: italic; }
+
+        .loading-screen { text-align: center; padding: 50px; background: white; border-radius: 10px; }
     </style>
 </head>
 <body>
 
-    <!-- ผังที่ 1: Water Withdrawal Analysis -->
-    <div class="dashboard-card">
-        <h2>
-            ผังที่ 1: Water Withdrawal Analysis 2026 (Jan - Apr)
-            <span class="date-info">Data as of: 18 May 2026</span>
-        </h2>
-        <div style="overflow-x: auto;">
-            <table id="withdrawalTable">
-                <thead>
-                    <tr>
-                        <th>Company</th>
-                        <th>Jan-26</th>
-                        <th>Feb-26</th>
-                        <th>%MoM</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <!-- ข้อมูลจะถูกเติมด้วย JavaScript -->
-                </tbody>
-            </table>
-        </div>
+<div class="container">
+    <div class="header">
+        <h2 style="margin:0;">📊 Production Monitoring (Monthly Analysis)</h2>
+        <div id="updateDate" style="font-size: 12px;">Data loading...</div>
     </div>
+    
+    <div id="loading" class="loading-screen">กำลังดึงข้อมูลจากไฟล์ Excel...</div>
 
-    <!-- ผังที่ 2: Water Intensity Monitoring -->
-    <h2 style="color: #0056b3; margin-left: 10px;">ผังที่ 2: Water Intensity Monitoring (m³/ton)</h2>
-    <div class="grid-container" id="intensityGrid">
-        <!-- การ์ดจะถูกเติมด้วย JavaScript -->
-    </div>
+    <table id="prodTable" style="display:none;">
+        <thead>
+            <tr>
+                <th>Company</th>
+                <th>เดือนที่แล้ว (Last Month)</th>
+                <th>เดือนปัจจุบัน (Current)</th>
+                <th>การเปลี่ยนแปลง (%MoM)</th>
+                <th>สถานะ / การดำเนินการ</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- ข้อมูลจะโหลดลงที่นี่ -->
+        </tbody>
+    </table>
+</div>
 
-    <script>
-        const fileName = "Envi Dashboard 2026.xlsx";
+<script>
+    const fileName = "Envi Dashboard 2026.xlsx";
 
-        async function loadData() {
-            try {
-                const response = await fetch(fileName);
-                const data = await response.arrayBuffer();
-                const workbook = XLSX.read(data, { type: 'array' });
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const json = XLSX.utils.sheet_to_json(sheet);
+    async function loadProductionData() {
+        try {
+            const response = await fetch(fileName);
+            const data = await response.arrayBuffer();
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(sheet);
 
-                renderTable(json);
-                renderCards(json);
-            } catch (err) {
-                console.error("Error loading data:", err);
-            }
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('prodTable').style.display = 'table';
+            document.getElementById('updateDate').innerText = "อัปเดตล่าสุด: " + new Date().toLocaleDateString('th-TH');
+
+            renderTable(json);
+        } catch (err) {
+            document.getElementById('loading').innerHTML = "❌ ไม่สามารถโหลดไฟล์ Excel ได้ (ตรวจสอบชื่อไฟล์หรือการอัปโหลด)";
+            console.error(err);
         }
+    }
 
-        function renderTable(data) {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
+    function renderTable(data) {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+
+        data.forEach(row => {
+            // ดึงข้อมูลจากคอลัมน์ (ปรับชื่อคอลัมน์ให้ตรงกับ Excel ของคุณที่นี่)
+            const company = row['Company'] || 'ไม่ระบุชื่อ';
+            const current = parseFloat(row['Current_Month']);
+            const last = parseFloat(row['Last_Month']);
             
-            data.forEach(row => {
-                const mom = parseFloat(row['%MoM'] || 0);
-                const momClass = mom >= 0 ? 'positive' : 'negative';
-                const momText = (mom >= 0 ? '+' : '') + (mom * 100).toFixed(1) + '%';
-                const rowClass = (row['Company'] === 'Olefins' || row['Company'] === 'LSP Complex') ? 'highlight' : '';
+            let momHtml = '';
+            let actionHtml = '';
 
-                tbody.innerHTML += `
-                    <tr class="${rowClass}">
-                        <td>${row['Company'] || '-'}</td>
-                        <td>${(row['Jan-26'] || 0).toLocaleString()}</td>
-                        <td>${(row['Feb-26'] || 0).toLocaleString()}</td>
-                        <td class="${momClass}">${momText}</td>
-                    </tr>
-                `;
-            });
-        }
+            // ตรวจสอบว่ากรอกข้อมูลหรือยัง
+            if (isNaN(current) || current === 0) {
+                momHtml = '<span class="no-data">ยังไม่มีข้อมูล</span>';
+                actionHtml = '<button class="status-badge follow-up" onclick="alert(\'ส่งคำแจ้งเตือนไปยัง ' + company + ' เรียบร้อยแล้ว\')">🔔 ติดตาม (Follow Up)</button>';
+            } else {
+                // คำนวณ % MoM
+                const diff = ((current - last) / last) * 100;
+                const diffDisplay = isFinite(diff) ? (diff > 0 ? '+' : '') + diff.toFixed(1) + '%' : 'N/A';
+                const diffClass = diff > 0 ? 'percent-up' : 'percent-down';
+                
+                momHtml = `<span class="${diffClass}">${diffDisplay}</span>`;
+                actionHtml = '<span class="status-badge completed">✅ กรอกแล้ว</span>';
+            }
 
-        function renderCards(data) {
-            const grid = document.getElementById('intensityGrid');
-            grid.innerHTML = '';
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${company}</strong></td>
+                    <td>${isNaN(last) ? '-' : last.toLocaleString()}</td>
+                    <td>${isNaN(current) ? '-' : current.toLocaleString()}</td>
+                    <td>${momHtml}</td>
+                    <td>${actionHtml}</td>
+                </tr>
+            `;
+        });
+    }
 
-            data.forEach(row => {
-                const val = parseFloat(row['Intensity'] || 0);
-                const target = parseFloat(row['Target'] || 0);
-                const isOnTrack = val <= target;
-                const cardClass = isOnTrack ? 'on-track' : 'follow-up';
-                const statusBtn = isOnTrack ? '<span class="btn-green">✅ On Track</span>' : '<span class="status-btn btn-red">Follow Up</span>';
-                const valClass = isOnTrack ? '' : 'red';
+    loadProductionData();
+</script>
 
-                grid.innerHTML += `
-                    <div class="intensity-card ${cardClass}">
-                        <div class="comp-name">${row['Company']}</div>
-                        <div class="value ${valClass}">${val.toFixed(2)} <span class="unit">m³/ton</span></div>
-                        <div class="target">Target: ${target.toFixed(2)}</div>
-                        <div>${statusBtn}</div>
-                    </div>
-                `;
-            });
-        }
-
-        loadData();
-    </script>
 </body>
 </html>
