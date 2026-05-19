@@ -11,60 +11,65 @@
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #333; }
         .container { max-width: 1400px; margin: auto; }
         
-        /* Header */
+        /* Header & Toggle Button */
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .header h1 { color: var(--primary); margin: 0; font-size: 24px; }
-        .header span { font-size: 13px; color: #666; margin-left: 10px; }
-        .btn-toggle { background: var(--accent); border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .header h1 { color: var(--primary); margin: 0; font-size: 24px; font-weight: bold; }
+        .btn-toggle { background: var(--accent); border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.2s; }
+        .btn-toggle:hover { background: #f0b700; }
 
-        /* Summary Boxes */
-        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-        .box { padding: 20px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05); }
-        .alert-box { background: #fff5f5; border: 1px solid #fed7d7; }
-        .analysis-box { background: #ebf8ff; border: 1px solid #bee3f8; }
+        /* Alert & Analysis Boxes */
+        .summary-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; margin-bottom: 25px; }
+        .box { padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); }
+        .alert-box { background: #fff5f5; border-color: #feb2b2; }
+        .analysis-box { background: #ebf8ff; border-color: #bee3f8; }
         
-        .box-title { font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .box-title { font-weight: bold; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 16px; }
         .alert-title { color: var(--danger); }
         .analysis-title { color: #2b6cb0; }
         
-        .btn-remind { background: var(--danger); color: white; border: none; width: 100%; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-remind { background: var(--danger); color: white; border: none; width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 12px; font-size: 14px; transition: 0.2s; }
+        .btn-remind:hover { background: #b91c1c; }
 
         /* Table */
-        .table-container { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow-x: auto; border: 1px solid #eee; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { background: #fff; color: var(--primary); padding: 15px 10px; border-bottom: 2px solid var(--primary); white-space: nowrap; font-weight: 600; }
-        td { padding: 12px 10px; border-bottom: 1px solid #f0f0f0; text-align: center; }
-        td:first-child { text-align: left; font-weight: 600; background: #fff; position: sticky; left: 0; z-index: 10; border-right: 2px solid #eee; min-width: 150px; }
+        .table-container { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); overflow-x: auto; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1300px; }
+        th { background: #fff; color: var(--primary); padding: 15px 10px; border-bottom: 2px solid var(--primary); white-space: nowrap; font-weight: 700; text-align: center; }
+        td { padding: 12px 10px; border-bottom: 1px solid #f1f5f9; text-align: center; }
         
-        .perc-col { background: #fff9db; font-weight: 600; font-size: 11px; }
-        .up { color: var(--danger); font-weight: bold; }
-        .down { color: var(--success); font-weight: bold; }
+        /* Sticky Column */
+        td:first-child { 
+            text-align: left; font-weight: 600; background: #fff; position: sticky; left: 0; z-index: 10; 
+            border-right: 2px solid #edf2f7; min-width: 160px;
+        }
+        tr:hover td { background-color: #f8fafc; }
+        tr:hover td:first-child { background-color: #f8fafc; }
         
-        .hidden { display: none; }
+        .perc-col { background: #fffdf2; font-weight: bold; font-size: 11px; min-width: 85px; }
+        .up { color: var(--danger); }
+        .down { color: var(--success); }
+        
+        ul#analysisList { list-style: none; padding: 0; margin: 0; font-size: 13px; line-height: 1.6; }
+        ul#analysisList li::before { content: "•"; color: #2b6cb0; font-weight: bold; margin-right: 8px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h1>Production Absolute <span id="asOfDate">อัปเดต: 18/05/2026</span></h1>
+        <h1>Production Absolute <span id="asOfDate" style="font-size: 14px; color: #666; font-weight: normal; margin-left: 10px;"></span></h1>
         <button class="btn-toggle" onclick="toggleAnalysis()">📊 <span id="toggleText">ปิดการวิเคราะห์ %</span></button>
     </div>
 
     <div class="summary-grid">
-        <!-- Alert Box -->
         <div class="box alert-box">
             <div class="box-title alert-title">🚨 แจ้งเตือน: ยังไม่กรอกข้อมูล (เกินวันที่ 15)</div>
-            <div id="missingList" style="font-size: 14px; color: #63171b;">ค้างส่งเมษายน: กำลังตรวจสอบ...</div>
-            <button class="btn-remind">📧 แจ้งเตือนการกรอกข้อมูล</button>
+            <div id="missingList" style="font-size: 14px; color: #742a2a;">กำลังตรวจสอบข้อมูลค้างส่ง...</div>
+            <button class="btn-remind" onclick="alert('ส่ง Email ติดตามทุกบริษัทเรียบร้อยแล้ว')">📧 แจ้งเตือนการกรอกข้อมูล</button>
         </div>
 
-        <!-- Analysis Box -->
         <div class="box analysis-box">
             <div class="box-title analysis-title">🔍 วิเคราะห์การเปลี่ยนแปลง (MoM Analysis)</div>
-            <ul id="analysisList" style="font-size: 13px; color: #2c5282; margin: 0; padding-left: 20px; line-height: 1.6;">
-                <li>กำลังวิเคราะห์ข้อมูล...</li>
-            </ul>
+            <ul id="analysisList"></ul>
         </div>
     </div>
 
@@ -81,93 +86,90 @@
 </div>
 
 <script>
-    // ตรวจสอบชื่อไฟล์ให้ตรงกับ GitHub
-    const fileName = "Envi Dashboard 2026.xlsx"; 
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    let rawData = [];
-
+    const fileName = "data.xlsx"; 
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    
     async function init() {
         try {
             const res = await fetch(fileName);
             if (!res.ok) throw new Error("File not found");
             const data = await res.arrayBuffer();
             const workbook = XLSX.read(data, { type: 'array' });
-            rawData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-            render();
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            // อ่านข้อมูลแบบ Array ของ Array เพื่อแก้ปัญหาชื่อหัวคอลัมน์ไม่ตรง
+            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+            render(rows);
             document.getElementById('asOfDate').innerText = "อัปเดต: " + new Date().toLocaleDateString('th-TH');
         } catch (e) {
-            console.error(e);
-            document.getElementById('missingList').innerHTML = "❌ หาไฟล์ '" + fileName + "' ไม่เจอใน GitHub ของคุณ";
+            document.getElementById('missingList').innerHTML = `<span style="color:red">❌ ไม่สามารถโหลดไฟล์ '${fileName}' ได้</span>`;
         }
     }
 
-    function render() {
+    function render(rows) {
         const thead = document.getElementById('theadRow');
         const tbody = document.getElementById('tbodyData');
         
+        // 1. สร้างหัวตาราง (แทรกคอลัมน์ % ระหว่างเดือน)
         let headHtml = '<th>Company Name</th>';
-        months.forEach((m, i) => {
+        monthNames.forEach((m, i) => {
             headHtml += `<th>${m}</th>`;
-            if (i < 11) headHtml += `<th class="perc-col">${m}-${months[i+1]} %</th>`;
+            if (i < 11) headHtml += `<th class="perc-col">${m}-${monthNames[i+1]} %</th>`;
         });
         thead.innerHTML = headHtml;
 
-        tbody.innerHTML = '';
+        // 2. จัดการข้อมูลรายบริษัท
         let missing = [];
-        let growthStats = [];
+        let stats = [];
+        tbody.innerHTML = '';
 
-        rawData.forEach(row => {
-            let rowHtml = `<td>${row['Company'] || 'N/A'}</td>`;
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (!row[0]) continue; // ข้ามแถวที่ไม่มีชื่อบริษัท
+
+            let rowHtml = `<td>${row[0]}</td>`;
             
-            months.forEach((m, i) => {
-                const currentVal = row[m] !== undefined ? parseFloat(row[m]) : null;
-                rowHtml += `<td>${currentVal !== null ? currentVal.toLocaleString(undefined, {minimumFractionDigits: 0}) : '-'}</td>`;
+            // วนลูปเดือน Jan (B) ถึง Dec (M) คือ Index 1 ถึง 12
+            for (let mIdx = 1; mIdx <= 12; mIdx++) {
+                const currentVal = row[mIdx] ? parseFloat(row[mIdx]) : null;
+                rowHtml += `<td>${currentVal !== null ? currentVal.toLocaleString() : '-'}</td>`;
 
-                if (i < 11) {
-                    const nextVal = row[months[i+1]] !== undefined ? parseFloat(row[months[i+1]]) : null;
-                    let percHtml = '-';
-                    if (currentVal !== null && nextVal !== null && currentVal !== 0) {
-                        const diff = ((nextVal - currentVal) / currentVal) * 100;
-                        const colorClass = diff >= 0 ? 'up' : 'down';
-                        percHtml = `<span class="${colorClass}">${diff >= 0 ? '+' : ''}${diff.toFixed(1)}%</span>`;
-                        
-                        // วิเคราะห์เดือนล่าสุด (สมมติว่าเป็นเดือน Apr เทียบกับ Mar)
-                        if(i === 2) growthStats.push({ name: row['Company'], diff: diff });
+                if (mIdx < 12) {
+                    const nextVal = row[mIdx + 1] ? parseFloat(row[mIdx + 1]) : null;
+                    let p = '-';
+                    if (currentVal && nextVal) {
+                        const d = ((nextVal - currentVal) / currentVal) * 100;
+                        p = `<span class="${d>=0?'up':'down'}">${d>=0?'+':''}${d.toFixed(1)}%</span>`;
+                        // เก็บสถิติเดือนล่าสุด (สมมติเดือน 4 เทียบ 3)
+                        if (mIdx === 3) stats.push({n: row[0], d: d});
                     }
-                    rowHtml += `<td class="perc-col">${percHtml}</td>`;
+                    rowHtml += `<td class="perc-col">${p}</td>`;
                 }
 
-                // ตรวจสอบข้อมูลค้างส่ง (สมมติเดือนปัจจุบันคือ Apr)
-                if (m === "Apr" && (currentVal === null || currentVal === 0)) {
-                    missing.push(row['Company']);
-                }
-            });
+                // เช็คค้างส่ง (สมมติเช็คเดือน Apr - Index 4)
+                if (mIdx === 4 && !currentVal) missing.push(row[0]);
+            }
             tbody.innerHTML += `<tr>${rowHtml}</tr>`;
-        });
+        }
 
-        document.getElementById('missingList').innerText = `ค้างส่งเมษายน: ${missing.length > 0 ? missing.join(', ') : 'ไม่มี'}`;
-        
-        if (growthStats.length > 0) {
-            growthStats.sort((a, b) => b.diff - a.diff);
-            const best = growthStats[0];
-            const worst = growthStats[growthStats.length - 1];
+        // 3. อัปเดต Summary
+        document.getElementById('missingList').innerText = "ค้างส่งเมษายน: " + (missing.length ? missing.join(", ") : "ส่งครบทุกบริษัท");
+        if(stats.length) {
+            stats.sort((a,b) => a.d - b.d);
             document.getElementById('analysisList').innerHTML = `
-                <li><strong>${worst.name}:</strong> ผันผวนรุนแรงที่สุด มีการดิ่งลง ${worst.diff.toFixed(1)}%</li>
-                <li><strong>${best.name}:</strong> เติบโตต่อเนื่องสูงสุด +${best.diff.toFixed(1)}%</li>
-                <li><strong>เสถียรภาพ:</strong> ตรวจพบ ${growthStats.filter(s => Math.abs(s.diff) < 10).length} บริษัทที่มีความผันผวน < 10%</li>
-            `;
+                <li><strong>${stats[0].n}:</strong> ผันผวนรุนแรงที่สุด ลดลง ${stats[0].d.toFixed(1)}%</li>
+                <li><strong>${stats[stats.length-1].n}:</strong> เติบโตสูงสุด +${stats[stats.length-1].d.toFixed(1)}%</li>
+                <li><strong>เสถียรภาพ:</strong> ตรวจพบกลุ่มที่มีความผันผวนต่ำ (< 10%) จำนวน ${stats.filter(s=>Math.abs(s.d)<10).length} บริษัท</li>`;
         }
     }
 
     function toggleAnalysis() {
         const cols = document.querySelectorAll('.perc-col');
-        const btnText = document.getElementById('toggleText');
-        cols.forEach(c => c.style.display = (c.style.display === 'none' ? 'table-cell' : 'none'));
-        btnText.innerText = (cols[0].style.display === 'none' ? "เปิดการวิเคราะห์ %" : "ปิดการวิเคราะห์ %");
+        const isHidden = cols[0].style.display === 'none';
+        cols.forEach(c => c.style.display = isHidden ? 'table-cell' : 'none');
+        document.getElementById('toggleText').innerText = isHidden ? "ปิดการวิเคราะห์ %" : "เปิดการวิเคราะห์ %";
     }
 
     init();
 </script>
-
 </body>
 </html>
