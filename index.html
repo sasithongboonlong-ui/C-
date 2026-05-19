@@ -34,11 +34,11 @@
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
         th { background: #fff; color: var(--primary); padding: 15px 10px; border-bottom: 2px solid var(--primary); white-space: nowrap; font-weight: 600; }
         td { padding: 12px 10px; border-bottom: 1px solid #f0f0f0; text-align: center; }
-        td:first-child { text-align: left; font-weight: 600; background: #fff; position: sticky; left: 0; z-index: 10; border-right: 2px solid #eee; }
+        td:first-child { text-align: left; font-weight: 600; background: #fff; position: sticky; left: 0; z-index: 10; border-right: 2px solid #eee; min-width: 150px; }
         
-        .perc-col { background: #fff9db; font-weight: 600; font-size: 12px; }
-        .up { color: var(--danger); }
-        .down { color: var(--success); }
+        .perc-col { background: #fff9db; font-weight: 600; font-size: 11px; }
+        .up { color: var(--danger); font-weight: bold; }
+        .down { color: var(--success); font-weight: bold; }
         
         .hidden { display: none; }
     </style>
@@ -62,7 +62,7 @@
         <!-- Analysis Box -->
         <div class="box analysis-box">
             <div class="box-title analysis-title">🔍 วิเคราะห์การเปลี่ยนแปลง (MoM Analysis)</div>
-            <ul id="analysisList" style="font-size: 14px; color: #2c5282; margin: 0; padding-left: 20px; line-height: 1.6;">
+            <ul id="analysisList" style="font-size: 13px; color: #2c5282; margin: 0; padding-left: 20px; line-height: 1.6;">
                 <li>กำลังวิเคราะห์ข้อมูล...</li>
             </ul>
         </div>
@@ -73,7 +73,6 @@
             <thead>
                 <tr id="theadRow">
                     <th>Company Name</th>
-                    <!-- คอลัมน์ Jan - Dec จะถูกแทรกที่นี่ -->
                 </tr>
             </thead>
             <tbody id="tbodyData"></tbody>
@@ -82,20 +81,23 @@
 </div>
 
 <script>
-    const fileName = "data.xlsx"; // เปลี่ยนเป็นชื่อไฟล์ Excel ของคุณ
+    // ตรวจสอบชื่อไฟล์ให้ตรงกับ GitHub
+    const fileName = "Envi Dashboard 2026.xlsx"; 
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     let rawData = [];
 
     async function init() {
         try {
             const res = await fetch(fileName);
+            if (!res.ok) throw new Error("File not found");
             const data = await res.arrayBuffer();
             const workbook = XLSX.read(data, { type: 'array' });
             rawData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
             render();
+            document.getElementById('asOfDate').innerText = "อัปเดต: " + new Date().toLocaleDateString('th-TH');
         } catch (e) {
             console.error(e);
-            document.body.innerHTML = "<h2 style='text-align:center; padding:50px;'>❌ ไม่สามารถโหลดไฟล์ Excel ได้ โปรดตรวจสอบชื่อไฟล์ 'data.xlsx' ใน GitHub</h2>";
+            document.getElementById('missingList').innerHTML = "❌ หาไฟล์ '" + fileName + "' ไม่เจอใน GitHub ของคุณ";
         }
     }
 
@@ -103,7 +105,6 @@
         const thead = document.getElementById('theadRow');
         const tbody = document.getElementById('tbodyData');
         
-        // 1. Create Header
         let headHtml = '<th>Company Name</th>';
         months.forEach((m, i) => {
             headHtml += `<th>${m}</th>`;
@@ -111,7 +112,6 @@
         });
         thead.innerHTML = headHtml;
 
-        // 2. Create Body
         tbody.innerHTML = '';
         let missing = [];
         let growthStats = [];
@@ -121,22 +121,23 @@
             
             months.forEach((m, i) => {
                 const currentVal = row[m] !== undefined ? parseFloat(row[m]) : null;
-                rowHtml += `<td>${currentVal !== null ? currentVal.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}</td>`;
+                rowHtml += `<td>${currentVal !== null ? currentVal.toLocaleString(undefined, {minimumFractionDigits: 0}) : '-'}</td>`;
 
                 if (i < 11) {
                     const nextVal = row[months[i+1]] !== undefined ? parseFloat(row[months[i+1]]) : null;
                     let percHtml = '-';
-                    if (currentVal && nextVal) {
+                    if (currentVal !== null && nextVal !== null && currentVal !== 0) {
                         const diff = ((nextVal - currentVal) / currentVal) * 100;
                         const colorClass = diff >= 0 ? 'up' : 'down';
                         percHtml = `<span class="${colorClass}">${diff >= 0 ? '+' : ''}${diff.toFixed(1)}%</span>`;
                         
-                        if(i === 2) growthStats.push({ name: row['Company'], diff: diff }); // เก็บสถิติเดือน Apr (Mar-Apr)
+                        // วิเคราะห์เดือนล่าสุด (สมมติว่าเป็นเดือน Apr เทียบกับ Mar)
+                        if(i === 2) growthStats.push({ name: row['Company'], diff: diff });
                     }
                     rowHtml += `<td class="perc-col">${percHtml}</td>`;
                 }
 
-                // Check missing for current month (assume Apr = index 3)
+                // ตรวจสอบข้อมูลค้างส่ง (สมมติเดือนปัจจุบันคือ Apr)
                 if (m === "Apr" && (currentVal === null || currentVal === 0)) {
                     missing.push(row['Company']);
                 }
@@ -144,7 +145,6 @@
             tbody.innerHTML += `<tr>${rowHtml}</tr>`;
         });
 
-        // 3. Update Alert & Analysis
         document.getElementById('missingList').innerText = `ค้างส่งเมษายน: ${missing.length > 0 ? missing.join(', ') : 'ไม่มี'}`;
         
         if (growthStats.length > 0) {
@@ -152,9 +152,9 @@
             const best = growthStats[0];
             const worst = growthStats[growthStats.length - 1];
             document.getElementById('analysisList').innerHTML = `
-                <li><strong>${worst.name}:</strong> ผันผวนรุนแรงที่สุด มีการดิ่งลงในเดือนเมษายน ${worst.diff.toFixed(1)}%</li>
-                <li><strong>${best.name}:</strong> เติบโตต่อเนื่องสูงสุดในเดือนเมษายน +${best.diff.toFixed(1)}%</li>
-                <li><strong>MOC:</strong> รักษาระดับการผลิตได้เสถียรที่สุด (ความผันผวนเฉลี่ย < 10%)</li>
+                <li><strong>${worst.name}:</strong> ผันผวนรุนแรงที่สุด มีการดิ่งลง ${worst.diff.toFixed(1)}%</li>
+                <li><strong>${best.name}:</strong> เติบโตต่อเนื่องสูงสุด +${best.diff.toFixed(1)}%</li>
+                <li><strong>เสถียรภาพ:</strong> ตรวจพบ ${growthStats.filter(s => Math.abs(s.diff) < 10).length} บริษัทที่มีความผันผวน < 10%</li>
             `;
         }
     }
@@ -162,8 +162,8 @@
     function toggleAnalysis() {
         const cols = document.querySelectorAll('.perc-col');
         const btnText = document.getElementById('toggleText');
-        cols.forEach(c => c.classList.toggle('hidden'));
-        btnText.innerText = cols[0].classList.contains('hidden') ? "เปิดการวิเคราะห์ %" : "ปิดการวิเคราะห์ %";
+        cols.forEach(c => c.style.display = (c.style.display === 'none' ? 'table-cell' : 'none'));
+        btnText.innerText = (cols[0].style.display === 'none' ? "เปิดการวิเคราะห์ %" : "ปิดการวิเคราะห์ %");
     }
 
     init();
