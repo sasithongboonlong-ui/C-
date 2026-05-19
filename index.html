@@ -1,121 +1,144 @@
+<!-- generated HTML -->
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Production Monitoring Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <title>Production Monitoring Full Year 2026</title>
+    <script src="/static/libraries/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f7f9; margin: 0; padding: 20px; }
-        .container { max-width: 1100px; margin: auto; }
-        .header { background: #003566; color: white; padding: 20px; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f4f8; margin: 0; padding: 20px; }
+        .container { max-width: 1300px; margin: auto; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: #003566; color: white; padding: 25px; display: flex; justify-content: space-between; align-items: center; }
+        .controls { padding: 15px 25px; background: #e9ecef; border-bottom: 1px solid #dee2e6; display: flex; align-items: center; gap: 15px; }
         
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 0 0 10px 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        th { background: #00509d; color: white; padding: 15px; text-align: left; font-size: 14px; }
-        td { padding: 15px; border-bottom: 1px solid #edf2f4; font-size: 15px; }
-        tr:hover { background-color: #f8f9fa; }
-
-        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; text-decoration: none; display: inline-block; }
-        .follow-up { background: #ff4d4d; color: white; border: none; cursor: pointer; transition: 0.3s; }
-        .follow-up:hover { background: #d90429; transform: scale(1.05); }
-        .completed { background: #e9f7ef; color: #27ae60; }
-
-        .percent-up { color: #d90429; font-weight: bold; }
-        .percent-down { color: #2ecc71; font-weight: bold; }
-        .no-data { color: #adb5bd; font-style: italic; }
-
-        .loading-screen { text-align: center; padding: 50px; background: white; border-radius: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #00509d; color: white; padding: 12px 8px; text-align: center; border: 1px solid #003f7d; }
+        td { padding: 10px 8px; border: 1px solid #dee2e6; text-align: right; }
+        td:first-child { text-align: left; font-weight: bold; background: #f8f9fa; position: sticky; left: 0; }
+        
+        .status-badge { padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; border: none; }
+        .follow-up { background: #ff4d4d; color: white; cursor: pointer; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        
+        .mom-val { display: block; font-size: 10px; margin-top: 4px; }
+        .up { color: #d90429; }
+        .down { color: #2ecc71; }
+        
+        select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-family: inherit; }
+        .btn-calc { background: #ffc300; color: #000; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-calc:hover { background: #ffd60a; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h2 style="margin:0;">📊 Production Monitoring (Monthly Analysis)</h2>
-        <div id="updateDate" style="font-size: 12px;">Data loading...</div>
+        <h2 style="margin:0;">🏗️ Production Monitoring System (Full Year)</h2>
+        <div id="dateNow"></div>
     </div>
-    
-    <div id="loading" class="loading-screen">กำลังดึงข้อมูลจากไฟล์ Excel...</div>
 
-    <table id="prodTable" style="display:none;">
-        <thead>
-            <tr>
-                <th>Company</th>
-                <th>เดือนที่แล้ว (Last Month)</th>
-                <th>เดือนปัจจุบัน (Current)</th>
-                <th>การเปลี่ยนแปลง (%MoM)</th>
-                <th>สถานะ / การดำเนินการ</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody">
-            <!-- ข้อมูลจะโหลดลงที่นี่ -->
-        </tbody>
-    </table>
+    <div class="controls">
+        <span>เทียบข้อมูล % MoM เดือน:</span>
+        <select id="monthSelect">
+            <option value="2">Feb vs Jan</option>
+            <option value="3">Mar vs Feb</option>
+            <option value="4">Apr vs Mar</option>
+            <option value="5">May vs Apr</option>
+            <option value="6">Jun vs May</option>
+            <option value="7">Jul vs Jun</option>
+            <option value="8">Aug vs Jul</option>
+            <option value="9">Sep vs Aug</option>
+            <option value="10">Oct vs Sep</option>
+            <option value="11">Nov vs Oct</option>
+            <option value="12">Dec vs Nov</option>
+        </select>
+        <button class="btn-calc" onclick="loadAndRender()">คำนวณการเปลี่ยนแปลง</button>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th style="min-width: 120px;">Company</th>
+                    <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th>
+                    <th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th>
+                    <th style="background: #ffc300; color: black; min-width: 100px;">สถานะล่าสุด</th>
+                </tr>
+            </thead>
+            <tbody id="mainBody">
+                <!-- ข้อมูลจะโหลดที่นี่ -->
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
     const fileName = "Envi Dashboard 2026.xlsx";
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-    async function loadProductionData() {
+    async function loadAndRender() {
         try {
             const response = await fetch(fileName);
             const data = await response.arrayBuffer();
             const workbook = XLSX.read(data, { type: 'array' });
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const json = XLSX.utils.sheet_to_json(sheet);
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+            
+            const selectedMonthIdx = parseInt(document.getElementById('monthSelect').value);
+            const tbody = document.getElementById('mainBody');
+            tbody.innerHTML = '';
+            
+            // ข้ามหัวตาราง วนลูปรายบริษัท
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row[0]) continue;
 
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('prodTable').style.display = 'table';
-            document.getElementById('updateDate').innerText = "อัปเดตล่าสุด: " + new Date().toLocaleDateString('th-TH');
+                let rowHtml = `<td>${row[0]}</td>`;
+                let lastValidMonthIdx = 0;
 
-            renderTable(json);
-        } catch (err) {
-            document.getElementById('loading').innerHTML = "❌ ไม่สามารถโหลดไฟล์ Excel ได้ (ตรวจสอบชื่อไฟล์หรือการอัปโหลด)";
-            console.error(err);
+                // วนลูปข้อมูล 12 เดือน (คอลัมน์ B-M คือ index 1-12)
+                for (let m = 1; m <= 12; m++) {
+                    const val = row[m];
+                    const isCurrentSelection = (m === selectedMonthIdx);
+                    let cellStyle = isCurrentSelection ? 'background: #fff9db;' : '';
+                    
+                    let cellContent = (val !== undefined && val !== null) ? parseFloat(val).toLocaleString() : '-';
+                    
+                    // คำนวณ MoM ถ้าเลือกเดือนนี้
+                    if (isCurrentSelection) {
+                        const currentVal = parseFloat(row[m]);
+                        const prevVal = parseFloat(row[m-1]);
+                        if (!isNaN(currentVal) && !isNaN(prevVal) && prevVal !== 0) {
+                            const diff = ((currentVal - prevVal) / prevVal) * 100;
+                            const diffClass = diff >= 0 ? 'up' : 'down';
+                            cellContent += `<span class="mom-val ${diffClass}">${diff >= 0 ? '+' : ''}${diff.toFixed(1)}%</span>`;
+                        }
+                    }
+
+                    rowHtml += `<td style="${cellStyle}">${cellContent}</td>`;
+                    if (val !== undefined && val !== null) lastValidMonthIdx = m;
+                }
+
+                // ตรวจสอบสถานะ (ดูจากเดือนปัจจุบัน - สมมติคือเดือน 5 พฤษภาคม)
+                // ถ้าเดือนล่าสุดที่กรอก ยังไม่ถึงเดือนปัจจุบัน ให้ขึ้น Follow Up
+                const currentSystemMonth = new Date().getMonth() + 1; 
+                let statusHtml = '';
+                if (lastValidMonthIdx < currentSystemMonth) {
+                    statusHtml = `<button class="status-badge follow-up">🔔 ตามข้อมูล</button>`;
+                } else {
+                    statusHtml = `<span class="status-badge completed" style="background:#d4edda; color:#155724;">✅ เรียบร้อย</span>`;
+                }
+
+                tbody.innerHTML += `<tr>${rowHtml}<td>${statusHtml}</td></tr>`;
+            }
+            document.getElementById('dateNow').innerText = "ข้อมูล ณ วันที่: " + new Date().toLocaleDateString('th-TH');
+        } catch (e) {
+            console.error(e);
+            alert("ไม่สามารถโหลดไฟล์ Excel ได้ โปรดตรวจสอบชื่อไฟล์ใน GitHub");
         }
     }
 
-    function renderTable(data) {
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '';
-
-        data.forEach(row => {
-            // ดึงข้อมูลจากคอลัมน์ (ปรับชื่อคอลัมน์ให้ตรงกับ Excel ของคุณที่นี่)
-            const company = row['Company'] || 'ไม่ระบุชื่อ';
-            const current = parseFloat(row['Current_Month']);
-            const last = parseFloat(row['Last_Month']);
-            
-            let momHtml = '';
-            let actionHtml = '';
-
-            // ตรวจสอบว่ากรอกข้อมูลหรือยัง
-            if (isNaN(current) || current === 0) {
-                momHtml = '<span class="no-data">ยังไม่มีข้อมูล</span>';
-                actionHtml = '<button class="status-badge follow-up" onclick="alert(\'ส่งคำแจ้งเตือนไปยัง ' + company + ' เรียบร้อยแล้ว\')">🔔 ติดตาม (Follow Up)</button>';
-            } else {
-                // คำนวณ % MoM
-                const diff = ((current - last) / last) * 100;
-                const diffDisplay = isFinite(diff) ? (diff > 0 ? '+' : '') + diff.toFixed(1) + '%' : 'N/A';
-                const diffClass = diff > 0 ? 'percent-up' : 'percent-down';
-                
-                momHtml = `<span class="${diffClass}">${diffDisplay}</span>`;
-                actionHtml = '<span class="status-badge completed">✅ กรอกแล้ว</span>';
-            }
-
-            tbody.innerHTML += `
-                <tr>
-                    <td><strong>${company}</strong></td>
-                    <td>${isNaN(last) ? '-' : last.toLocaleString()}</td>
-                    <td>${isNaN(current) ? '-' : current.toLocaleString()}</td>
-                    <td>${momHtml}</td>
-                    <td>${actionHtml}</td>
-                </tr>
-            `;
-        });
-    }
-
-    loadProductionData();
+    window.onload = loadAndRender;
 </script>
-
 </body>
 </html>
